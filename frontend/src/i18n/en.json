@@ -1,0 +1,12 @@
+{
+    "welcome": "Welcome",
+    "login": "Login",
+    "register": "Register",
+    "settings": "Settings",
+    "admin": "Admin Dashboard",
+    "logout": "Logout",
+    "save": "Save",
+    "topic": "Topic",
+    "difficulty": "Difficulty",
+    "language": "Language"
+}
