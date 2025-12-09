@@ -5,9 +5,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../state/appStore';
 import { getAllAvailableTopics, syncTopics } from '../services/topicSync';
-import { syncSettingsToBackend } from '../services/pushService';
+import { syncSettingsToBackend, getNotificationPermission, ensureNotificationPermission, subscribeToPush, registerSubscription } from '../services/pushService';
 import { StaticTopic, Difficulty, Language } from '../db/db';
-import { Trash2, Plus, Check, Clock, Bell, BookOpen, Globe } from 'lucide-react';
+import { Trash2, Plus, Check, Clock, Bell, BookOpen, Globe, AlertCircle, ShieldCheck } from 'lucide-react';
 
 const DIFFICULTIES: { value: Difficulty; label: Record<Language, string> }[] = [
     { value: 'fresher', label: { en: 'Fresher', vi: 'Fresher', jp: '新人' } },
@@ -22,6 +22,45 @@ const LANGUAGES: { value: Language; label: string }[] = [
     { value: 'jp', label: '日本語' },
 ];
 
+// Notification permission labels by language
+const NOTIFICATION_LABELS: Record<Language, {
+    title: string;
+    enabled: string;
+    disabled: string;
+    blocked: string;
+    enableButton: string;
+    blockedHint: string;
+    requiredHint: string;
+}> = {
+    en: {
+        title: 'Notification Permission',
+        enabled: 'Notifications enabled',
+        disabled: 'Notifications disabled',
+        blocked: 'Notifications blocked',
+        enableButton: 'Enable Notifications',
+        blockedHint: 'Please enable notifications in your browser settings',
+        requiredHint: 'Notification permission is required to save settings',
+    },
+    vi: {
+        title: 'Quyền thông báo',
+        enabled: 'Thông báo đã bật',
+        disabled: 'Thông báo đã tắt',
+        blocked: 'Thông báo bị chặn',
+        enableButton: 'Bật thông báo',
+        blockedHint: 'Vui lòng bật thông báo trong cài đặt trình duyệt',
+        requiredHint: 'Cần cấp quyền thông báo để lưu cài đặt',
+    },
+    jp: {
+        title: '通知権限',
+        enabled: '通知が有効です',
+        disabled: '通知が無効です',
+        blocked: '通知がブロックされています',
+        enableButton: '通知を有効にする',
+        blockedHint: 'ブラウザの設定で通知を有効にしてください',
+        requiredHint: '設定を保存するには通知権限が必要です',
+    },
+};
+
 export function SettingsPage() {
     const { settings, updateSettings, addSelectedTopic, removeSelectedTopic } = useAppStore();
     const [availableTopics, setAvailableTopics] = useState<StaticTopic[]>([]);
@@ -31,8 +70,14 @@ export function SettingsPage() {
     const [isOverTrash, setIsOverTrash] = useState(false);
     const trashRef = useRef<HTMLDivElement>(null);
 
+    // Notification permission state
+    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+    const [showPermissionError, setShowPermissionError] = useState(false);
+
     useEffect(() => {
         loadTopics();
+        // Check notification permission on mount
+        setNotificationPermission(getNotificationPermission());
     }, []);
 
     const loadTopics = async () => {
@@ -45,7 +90,47 @@ export function SettingsPage() {
         }
     };
 
+    const handleEnableNotifications = async () => {
+        setShowPermissionError(false);
+        const result = await ensureNotificationPermission();
+
+        if (result.granted) {
+            setNotificationPermission('granted');
+            // Also subscribe to push if newly granted
+            const subscription = await subscribeToPush();
+            if (subscription) {
+                await registerSubscription(subscription);
+            }
+        } else if (result.needsManualAction) {
+            setNotificationPermission('denied');
+        } else {
+            setNotificationPermission('default');
+        }
+    };
+
     const handleSaveSettings = async () => {
+        setShowPermissionError(false);
+
+        // Check notification permission first
+        if (notificationPermission !== 'granted') {
+            const result = await ensureNotificationPermission();
+
+            if (!result.granted) {
+                setShowPermissionError(true);
+                if (result.needsManualAction) {
+                    setNotificationPermission('denied');
+                }
+                return;
+            }
+
+            setNotificationPermission('granted');
+            // Subscribe to push if newly granted
+            const subscription = await subscribeToPush();
+            if (subscription) {
+                await registerSubscription(subscription);
+            }
+        }
+
         setIsSaving(true);
         try {
             await syncSettingsToBackend();
@@ -230,7 +315,68 @@ export function SettingsPage() {
             <section className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
                     <Bell size={18} className="text-blue-400" />
-                    <h2 className="font-semibold">Notifications</h2>
+                    <h2 className="font-semibold">{NOTIFICATION_LABELS[settings.language].title}</h2>
+                </div>
+
+                {/* Notification Permission Toggle */}
+                <div className={`bg-gray-800/50 rounded-xl border p-4 mb-4 ${showPermissionError
+                        ? 'border-red-500/50'
+                        : notificationPermission === 'granted'
+                            ? 'border-green-500/30'
+                            : 'border-gray-700'
+                    }`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            {notificationPermission === 'granted' ? (
+                                <div className="p-2 rounded-full bg-green-500/20">
+                                    <ShieldCheck size={20} className="text-green-400" />
+                                </div>
+                            ) : (
+                                <div className="p-2 rounded-full bg-gray-700">
+                                    <AlertCircle size={20} className="text-gray-400" />
+                                </div>
+                            )}
+                            <div>
+                                <p className={`font-medium ${notificationPermission === 'granted'
+                                        ? 'text-green-400'
+                                        : notificationPermission === 'denied'
+                                            ? 'text-red-400'
+                                            : 'text-gray-300'
+                                    }`}>
+                                    {notificationPermission === 'granted'
+                                        ? NOTIFICATION_LABELS[settings.language].enabled
+                                        : notificationPermission === 'denied'
+                                            ? NOTIFICATION_LABELS[settings.language].blocked
+                                            : NOTIFICATION_LABELS[settings.language].disabled}
+                                </p>
+                                {notificationPermission === 'denied' && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {NOTIFICATION_LABELS[settings.language].blockedHint}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {notificationPermission !== 'granted' && (
+                            <button
+                                onClick={handleEnableNotifications}
+                                className="px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 
+                                    text-blue-400 text-sm font-medium hover:bg-blue-500/30 transition-all"
+                            >
+                                {NOTIFICATION_LABELS[settings.language].enableButton}
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Error message when permission is required */}
+                    {showPermissionError && (
+                        <div className="mt-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                            <p className="text-xs text-red-400 flex items-center gap-2">
+                                <AlertCircle size={14} />
+                                {NOTIFICATION_LABELS[settings.language].requiredHint}
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Push Count */}

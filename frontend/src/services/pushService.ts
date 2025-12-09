@@ -40,6 +40,16 @@ export async function getOrCreateDeviceUUID(): Promise<string> {
 }
 
 /**
+ * Get current notification permission status
+ */
+export function getNotificationPermission(): NotificationPermission {
+    if (!('Notification' in window)) {
+        return 'denied';
+    }
+    return Notification.permission;
+}
+
+/**
  * Request notification permission
  */
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
@@ -47,6 +57,31 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
         throw new Error('Notifications not supported');
     }
     return Notification.requestPermission();
+}
+
+/**
+ * Ensure notification permission is granted before proceeding
+ * Returns true if permission is granted, false otherwise
+ */
+export async function ensureNotificationPermission(): Promise<{ granted: boolean; needsManualAction: boolean }> {
+    if (!isPushSupported()) {
+        return { granted: false, needsManualAction: false };
+    }
+
+    const currentPermission = getNotificationPermission();
+
+    if (currentPermission === 'granted') {
+        return { granted: true, needsManualAction: false };
+    }
+
+    if (currentPermission === 'denied') {
+        // User previously blocked notifications - needs manual action in browser settings
+        return { granted: false, needsManualAction: true };
+    }
+
+    // Permission is 'default' - prompt user
+    const newPermission = await requestNotificationPermission();
+    return { granted: newPermission === 'granted', needsManualAction: newPermission === 'denied' };
 }
 
 /**
