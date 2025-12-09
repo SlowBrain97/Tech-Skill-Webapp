@@ -162,6 +162,7 @@ export async function ensureNotificationPermission(): Promise<{ granted: boolean
  */
 export async function subscribeToPush(): Promise<PushSubscription | null> {
     if (!isPushSupported()) {
+        toast.error('Push notifications not supported');
         console.warn('Push notifications not supported');
         return null;
     }

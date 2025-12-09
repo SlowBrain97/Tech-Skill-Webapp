@@ -2,9 +2,11 @@ import { Controller, Post, Put, Delete, Body, Param, HttpCode, HttpStatus } from
 import { SubscribersService } from '../subscribers/subscribers.service';
 import { PushService } from './push.service';
 import { SubscribeDto, UpdateSettingsDto } from '../subscribers/subscriber.dto';
+import { Logger } from '@nestjs/common';
 
 @Controller('api/push')
 export class PushController {
+    private readonly logger = new Logger(PushController.name);
     constructor(
         private subscribersService: SubscribersService,
         private pushService: PushService,
@@ -16,6 +18,7 @@ export class PushController {
     @Post('subscribe')
     async subscribe(@Body() dto: SubscribeDto) {
         const subscriber = await this.subscribersService.subscribe(dto);
+        this.logger.log(`Subscribed device: ${subscriber.deviceUUID}`);
         return {
             success: true,
             deviceUUID: subscriber.deviceUUID,

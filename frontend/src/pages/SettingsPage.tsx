@@ -8,6 +8,7 @@ import { getAllAvailableTopics, syncTopics } from '../services/topicSync';
 import { syncSettingsToBackend, getNotificationPermission, ensureNotificationPermission, subscribeToPush, registerSubscription } from '../services/pushService';
 import { StaticTopic, Difficulty, Language } from '../db/db';
 import { Trash2, Plus, Check, Clock, Bell, BookOpen, Globe, AlertCircle, ShieldCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const DIFFICULTIES: { value: Difficulty; label: Record<Language, string> }[] = [
     { value: 'fresher', label: { en: 'Fresher', vi: 'Fresher', jp: '新人' } },
@@ -93,7 +94,10 @@ export function SettingsPage() {
     const handleEnableNotifications = async () => {
         setShowPermissionError(false);
         const result = await ensureNotificationPermission();
-
+        if (!result.granted && !result.needsManualAction) {
+            toast.error('Your browser does not support push notifications');
+            return;
+        }
         if (result.granted) {
             setNotificationPermission('granted');
             // Also subscribe to push if newly granted
