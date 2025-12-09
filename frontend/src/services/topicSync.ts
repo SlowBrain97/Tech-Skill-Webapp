@@ -5,6 +5,10 @@
 import { bulkSaveStaticTopics, getAllStaticTopics, StaticTopic } from '../db/db';
 import { STATIC_TOPICS } from './preload';
 
+import toast from 'react-hot-toast';
+
+// ... existing code ...
+
 const API_URL = import.meta.env.VITE_API_URL || '';
 
 interface DynamicTopic {
@@ -35,6 +39,7 @@ export async function fetchTopicsFromBackend(): Promise<TopicsResponse | null> {
         return response.json();
     } catch (error) {
         console.error('Failed to fetch topics:', error);
+        toast.error('Failed to update topics');
         return null;
     }
 }
@@ -64,7 +69,7 @@ export async function syncTopics(): Promise<{
                     id: dt.name,
                     name: dt.name,
                     displayName: dt.displayName || { en: dt.name, vi: dt.name, jp: dt.name },
-                    questionCount: 0, // Will be updated when questions are synced
+                    questionCount: 0,
                 });
             }
         }

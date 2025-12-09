@@ -10,11 +10,15 @@ import { InstallPage } from './pages/InstallPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { useAppStore } from './state/appStore';
 import { useA2HS } from './hooks/useA2HS';
+import { useTranslation } from 'react-i18next';
+import { Toaster } from 'react-hot-toast';
 import { performDailyCleanup, getStaticQuestionCount } from './db/db';
 
 function App() {
-  const { isInstalled, isPreloaded, setIsInstalled, setIsPreloaded, loadFromIndexedDB } = useAppStore();
+  const { isInstalled, isPreloaded, setIsInstalled, setIsPreloaded, loadFromIndexedDB, settings } = useAppStore();
   const { isInstalled: isA2HSInstalled } = useA2HS();
+
+  const { i18n } = useTranslation();
 
   // Initialize app on mount
   useEffect(() => {
@@ -40,6 +44,13 @@ function App() {
     init();
   }, []);
 
+  // Sync language with i18n
+  useEffect(() => {
+    if (settings.language && i18n.language !== settings.language) {
+      i18n.changeLanguage(settings.language);
+    }
+  }, [settings.language, i18n]);
+
   // Listen for messages from service worker
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -63,6 +74,12 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster position="bottom-center" toastOptions={{
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+      }} />
       <Routes>
         {/* Main routes */}
         <Route path="/" element={<Navigate to="/settings" replace />} />

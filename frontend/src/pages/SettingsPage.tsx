@@ -127,7 +127,11 @@ export function SettingsPage() {
             // Subscribe to push if newly granted
             const subscription = await subscribeToPush();
             if (subscription) {
+                console.log('Subscribed to push:', subscription);
                 await registerSubscription(subscription);
+            }
+            else {
+                console.log('Failed to subscribe to push');
             }
         }
 
@@ -320,10 +324,10 @@ export function SettingsPage() {
 
                 {/* Notification Permission Toggle */}
                 <div className={`bg-gray-800/50 rounded-xl border p-4 mb-4 ${showPermissionError
-                        ? 'border-red-500/50'
-                        : notificationPermission === 'granted'
-                            ? 'border-green-500/30'
-                            : 'border-gray-700'
+                    ? 'border-red-500/50'
+                    : notificationPermission === 'granted'
+                        ? 'border-green-500/30'
+                        : 'border-gray-700'
                     }`}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -338,10 +342,10 @@ export function SettingsPage() {
                             )}
                             <div>
                                 <p className={`font-medium ${notificationPermission === 'granted'
-                                        ? 'text-green-400'
-                                        : notificationPermission === 'denied'
-                                            ? 'text-red-400'
-                                            : 'text-gray-300'
+                                    ? 'text-green-400'
+                                    : notificationPermission === 'denied'
+                                        ? 'text-red-400'
+                                        : 'text-gray-300'
                                     }`}>
                                     {notificationPermission === 'granted'
                                         ? NOTIFICATION_LABELS[settings.language].enabled

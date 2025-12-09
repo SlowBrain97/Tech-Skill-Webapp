@@ -2,9 +2,82 @@
  * Push subscription service
  */
 
+import toast from 'react-hot-toast';
 import { getDevice, generateDeviceUUID, getSettings } from '../db/db';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
+// ... existing code ...
+
+/**
+ * Send subscription to backend
+ */
+export async function registerSubscription(subscription: PushSubscription): Promise<boolean> {
+    try {
+        const uuid = await getOrCreateDeviceUUID();
+        const settings = await getSettings();
+
+        const response = await fetch(`${API_URL}/api/push/subscribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                deviceUUID: uuid,
+                pushSubscription: subscription.toJSON(),
+                selectedTopics: settings.selectedTopics,
+                difficulty: settings.difficulty,
+                pushPerDay: settings.pushPerDay,
+                timeStart: settings.timeStart,
+                timeEnd: settings.timeEnd,
+            }),
+        });
+
+        if (response.ok) {
+            toast.success('Push notifications enabled!');
+        } else {
+            toast.error('Failed to enable notifications');
+        }
+
+        return response.ok;
+    } catch (error) {
+        console.error('Failed to register subscription:', error);
+        toast.error('Failed to enable notifications');
+        return false;
+    }
+}
+
+/**
+ * Update device settings on backend
+ */
+export async function syncSettingsToBackend(): Promise<boolean> {
+    try {
+        const uuid = await getOrCreateDeviceUUID();
+        const settings = await getSettings();
+
+        const response = await fetch(`${API_URL}/api/push/settings/${uuid}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                selectedTopics: settings.selectedTopics,
+                difficulty: settings.difficulty,
+                pushPerDay: settings.pushPerDay,
+                timeStart: settings.timeStart,
+                timeEnd: settings.timeEnd,
+            }),
+        });
+
+        if (response.ok) {
+            toast.success('Settings saved successfully!');
+        } else {
+            toast.error('Failed to save settings');
+        }
+
+        return response.ok;
+    } catch (error) {
+        console.error('Failed to sync settings:', error);
+        toast.error('Failed to save settings');
+        return false;
+    }
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
 
 /**
@@ -118,62 +191,6 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
 }
 
 /**
- * Send subscription to backend
- */
-export async function registerSubscription(subscription: PushSubscription): Promise<boolean> {
-    try {
-        const uuid = await getOrCreateDeviceUUID();
-        const settings = await getSettings();
-
-        const response = await fetch(`${API_URL}/api/push/subscribe`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                deviceUUID: uuid,
-                pushSubscription: subscription.toJSON(),
-                selectedTopics: settings.selectedTopics,
-                difficulty: settings.difficulty,
-                pushPerDay: settings.pushPerDay,
-                timeStart: settings.timeStart,
-                timeEnd: settings.timeEnd,
-            }),
-        });
-
-        return response.ok;
-    } catch (error) {
-        console.error('Failed to register subscription:', error);
-        return false;
-    }
-}
-
-/**
- * Update device settings on backend
- */
-export async function syncSettingsToBackend(): Promise<boolean> {
-    try {
-        const uuid = await getOrCreateDeviceUUID();
-        const settings = await getSettings();
-
-        const response = await fetch(`${API_URL}/api/push/settings/${uuid}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                selectedTopics: settings.selectedTopics,
-                difficulty: settings.difficulty,
-                pushPerDay: settings.pushPerDay,
-                timeStart: settings.timeStart,
-                timeEnd: settings.timeEnd,
-            }),
-        });
-
-        return response.ok;
-    } catch (error) {
-        console.error('Failed to sync settings:', error);
-        return false;
-    }
-}
-
-/**
  * Unsubscribe from push notifications
  */
 export async function unsubscribeFromPush(): Promise<boolean> {
@@ -189,11 +206,14 @@ export async function unsubscribeFromPush(): Promise<boolean> {
             await fetch(`${API_URL}/api/push/unsubscribe/${uuid}`, {
                 method: 'DELETE',
             });
+
+            toast.success('Notifications disabled');
         }
 
         return true;
     } catch (error) {
         console.error('Failed to unsubscribe:', error);
+        toast.error('Failed to disable notifications');
         return false;
     }
 }
