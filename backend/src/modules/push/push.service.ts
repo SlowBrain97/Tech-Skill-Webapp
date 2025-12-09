@@ -19,7 +19,9 @@ const STATIC_TOPICS = [
     'nosql',
     'rdbms',
     'microservices',
-];
+    'mysql',
+    'postgres'
+]
 
 interface PushPayload {
     type: 'static' | 'dynamic';
