@@ -4,12 +4,9 @@
 
 import toast from 'react-hot-toast';
 import { getDevice, generateDeviceUUID, getSettings } from '../db/db';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
 
-// ... existing code ...
-
-/**
- * Send subscription to backend
- */
 export async function registerSubscription(subscription: PushSubscription): Promise<boolean> {
     try {
         const uuid = await getOrCreateDeviceUUID();
@@ -77,8 +74,7 @@ export async function syncSettingsToBackend(): Promise<boolean> {
     }
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
+
 
 /**
  * Convert VAPID key to Uint8Array
@@ -121,7 +117,10 @@ export function getNotificationPermission(): NotificationPermission {
     }
     return Notification.permission;
 }
-
+export async function getExistingPushSubscription(): Promise<PushSubscription | null> {
+    const registration = await navigator.serviceWorker.ready;
+    return registration.pushManager.getSubscription();
+}
 /**
  * Request notification permission
  */
@@ -162,7 +161,6 @@ export async function ensureNotificationPermission(): Promise<{ granted: boolean
  */
 export async function subscribeToPush(): Promise<PushSubscription | null> {
     if (!isPushSupported()) {
-        toast.error('Push notifications not supported');
         console.warn('Push notifications not supported');
         return null;
     }
@@ -190,7 +188,13 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
 
     return subscription;
 }
-
+export async function getExistingOrCreateSubscription(): Promise<PushSubscription | null> {
+    const subscription = await subscribeToPush();
+    if (subscription) {
+        await registerSubscription(subscription);
+    }
+    return subscription;
+}
 /**
  * Unsubscribe from push notifications
  */

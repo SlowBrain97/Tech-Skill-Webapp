@@ -30,7 +30,7 @@ export class SubscribersService {
 
             return existing.save();
         }
-
+        this.logger.log(`New subscriber: ${dto.deviceUUID}`);
         // Create new subscriber
         return this.subscriberModel.create({
             ...dto,

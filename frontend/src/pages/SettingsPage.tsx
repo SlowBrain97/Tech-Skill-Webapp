@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from '../state/appStore';
 import { getAllAvailableTopics, syncTopics } from '../services/topicSync';
-import { syncSettingsToBackend, getNotificationPermission, ensureNotificationPermission, subscribeToPush, registerSubscription } from '../services/pushService';
+import { syncSettingsToBackend, getNotificationPermission, ensureNotificationPermission, subscribeToPush, registerSubscription, getExistingPushSubscription } from '../services/pushService';
 import { StaticTopic, Difficulty, Language } from '../db/db';
 import { Trash2, Plus, Check, Clock, Bell, BookOpen, Globe, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -95,7 +95,7 @@ export function SettingsPage() {
         setShowPermissionError(false);
         const result = await ensureNotificationPermission();
         if (!result.granted && !result.needsManualAction) {
-            toast.error('Your browser does not support push notifications');
+            toast.error('Your browser does not support push notifications, you need to add this site to your home screen');
             return;
         }
         if (result.granted) {
@@ -115,36 +115,28 @@ export function SettingsPage() {
     const handleSaveSettings = async () => {
         setShowPermissionError(false);
 
-        // Check notification permission first
-        if (notificationPermission !== 'granted') {
-            const result = await ensureNotificationPermission();
+        const sub = await getExistingPushSubscription();
 
-            if (!result.granted) {
+        if (!sub) {
+            const permission = await ensureNotificationPermission();
+
+            if (!permission.granted) {
                 setShowPermissionError(true);
-                if (result.needsManualAction) {
-                    setNotificationPermission('denied');
-                }
                 return;
             }
 
-            setNotificationPermission('granted');
-            // Subscribe to push if newly granted
-            const subscription = await subscribeToPush();
-            if (subscription) {
-                console.log('Subscribed to push:', subscription);
-                await registerSubscription(subscription);
-            }
-            else {
-                console.log('Failed to subscribe to push');
+            const newSub = await subscribeToPush();
+            if (newSub) {
+                await registerSubscription(newSub);
+            } else {
+                console.log("Cannot create subscription → stop");
+                return;
             }
         }
 
         setIsSaving(true);
-        try {
-            await syncSettingsToBackend();
-        } finally {
-            setIsSaving(false);
-        }
+        await syncSettingsToBackend();
+        setIsSaving(false);
     };
 
     const handleDragStart = (topicId: string) => {
