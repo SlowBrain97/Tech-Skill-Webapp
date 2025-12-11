@@ -9,6 +9,7 @@ import { syncSettingsToBackend, getNotificationPermission, ensureNotificationPer
 import { StaticTopic, Difficulty, Language } from '../db/db';
 import { Trash2, Plus, Check, Clock, Bell, BookOpen, Globe, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const DIFFICULTIES: { value: Difficulty; label: Record<Language, string> }[] = [
     { value: 'fresher', label: { en: 'Fresher', vi: 'Fresher', jp: '新人' } },
@@ -70,7 +71,7 @@ export function SettingsPage() {
     const [draggedTopic, setDraggedTopic] = useState<string | null>(null);
     const [isOverTrash, setIsOverTrash] = useState(false);
     const trashRef = useRef<HTMLDivElement>(null);
-
+    const navigate = useNavigate();
     // Notification permission state
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
     const [showPermissionError, setShowPermissionError] = useState(false);
@@ -184,9 +185,20 @@ export function SettingsPage() {
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 pb-20">
             {/* Header */}
             <header className="mb-6">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                    Settings
-                </h1>
+                <div className='flex justify-between items-center'>
+                    <div>
+                        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                            Settings
+                        </h1>
+                    </div>
+                    <button
+                        onClick={() => navigate('/home')}
+                        className="px-6 py-3 bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 rounded-xl font-medium transition-colors"
+                    >
+                        Go to Home
+                    </button>
+                </div>
+
                 <p className="text-gray-400 text-sm mt-1">Configure your learning preferences</p>
             </header>
 

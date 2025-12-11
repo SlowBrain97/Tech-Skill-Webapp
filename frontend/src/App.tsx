@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SettingsPage } from './pages/SettingsPage';
 import { QuestionPage } from './pages/QuestionPage';
+import { HomePage } from './pages/HomePage';
 import { InstallPage } from './pages/InstallPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { useAppStore } from './state/appStore';
@@ -56,8 +57,13 @@ function App() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data?.type === 'NOTIFICATION_CLICK') {
-          // Handle notification click from SW
-          useAppStore.getState().setCurrentQuestion(event.data.question);
+          const q = event.data.question;
+
+          const set = useAppStore.getState().setCurrentQuestion;
+          set(q);
+
+          // ⭐ Force navigate
+          window.location.href = `/question?id=${q.id}`;
         }
       });
     }
@@ -82,7 +88,7 @@ function App() {
       }} />
       <Routes>
         {/* Main routes */}
-        <Route path="/" element={<Navigate to="/settings" replace />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/question" element={<QuestionPage />} />
 
@@ -90,7 +96,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/settings" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

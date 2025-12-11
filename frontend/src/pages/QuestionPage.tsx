@@ -31,6 +31,25 @@ export function QuestionPage() {
         };
     }, []);
 
+    // Handle URL query param for ID (deep linking)
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const id = searchParams.get('id');
+
+        if (id && !currentQuestion) {
+            import('../db/db').then(({ getAllStaticQuestions }) => {
+                getAllStaticQuestions().then(questions => {
+                    const found = questions.find(q => q.id === id);
+                    if (found) {
+                        useAppStore.getState().setCurrentQuestion({
+                            ...found, // Cast to any if needed or match type
+                        } as any);
+                    }
+                });
+            });
+        }
+    }, [currentQuestion]);
+
     const handleToggleAnswer = () => {
         setIsAnimating(true);
         toggleShowAnswer();

@@ -177,7 +177,7 @@ async function handlePush(event: PushEvent) {
         }
 
         // Show notification
-        await self.registration.showNotification('📚 Tech Question', {
+        await self.registration.showNotification('📚 Question', {
             body: notificationBody,
             icon: '/pwa-192x192.png',
             badge: '/pwa-192x192.png',
@@ -204,7 +204,6 @@ async function handlePush(event: PushEvent) {
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
     console.log('[SW] Notification clicked:', event.action);
     event.notification.close();
-
     if (event.action === 'dismiss') {
         return;
     }
