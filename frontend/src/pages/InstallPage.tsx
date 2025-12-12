@@ -9,6 +9,7 @@ import { initializePushAfterInstall } from '../services/pushService';
 import { performDailyCleanup } from '../db/db';
 import { useAppStore } from '../state/appStore';
 import { Smartphone, Download, Bell, Zap, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type InstallStep = 'prompt' | 'installing' | 'preloading' | 'done';
 
