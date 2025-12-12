@@ -114,7 +114,12 @@ export class PushService {
         const { timeStart, timeEnd, pushPerDay } = subscriber;
 
         const [startH, startM] = timeStart.split(':').map(Number);
-        const [endH, endM] = timeEnd.split(':').map(Number);
+        const [endH, endM] = timeEnd.split(':').map((value, index) => {
+            if (index === 0 && Number(value) === 0) {
+                return Number(value) + 24;
+            }
+            return Number(value);
+        });
 
         const startMinutes = startH * 60 + startM;
         const endMinutes = endH * 60 + endM;
