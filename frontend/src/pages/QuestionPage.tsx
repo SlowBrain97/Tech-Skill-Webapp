@@ -64,10 +64,10 @@ export function QuestionPage() {
                     <h2 className="text-xl font-semibold text-gray-400 mb-2">No Question</h2>
                     <p className="text-gray-500 mb-6">Wait for a notification or check your settings.</p>
                     <button
-                        onClick={() => navigate('/settings')}
+                        onClick={() => navigate('/')}
                         className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl font-medium transition-colors"
                     >
-                        Go to Settings
+                        Go to Home
                     </button>
                 </div>
             </div>
@@ -82,7 +82,7 @@ export function QuestionPage() {
             <header className="sticky top-0 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800 p-4 z-10">
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={() => navigate('/settings')}
+                        onClick={() => navigate('/')}
                         className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
                     >
                         <ArrowLeft size={20} />

@@ -216,12 +216,14 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
             // Try to focus existing window
             for (const client of clients) {
                 if ('focus' in client) {
-                    client.focus();
+
                     // Post message to client with question data
                     client.postMessage({
                         type: 'NOTIFICATION_CLICK',
                         question: data?.question,
+                        url
                     });
+                    client.focus();
                     return;
                 }
             }
