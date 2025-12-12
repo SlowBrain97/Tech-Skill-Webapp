@@ -58,12 +58,12 @@ function App() {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data?.type === 'NOTIFICATION_CLICK') {
           const q = event.data.question;
-
+          const url = event.data.url;
           const set = useAppStore.getState().setCurrentQuestion;
           set(q);
 
           // ⭐ Force navigate
-          window.location.href = `/question?id=${q.id}`;
+          window.location.href = url;
         }
       });
     }

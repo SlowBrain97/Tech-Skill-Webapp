@@ -17,7 +17,7 @@ export function InstallPage() {
     const { setIsInstalled, setIsPreloaded, setPreloadProgress } = useAppStore();
     const [step, setStep] = useState<InstallStep>('prompt');
     const [error, setError] = useState<string | null>(null);
-
+    const navigate = useNavigate();
     const handleInstall = async () => {
         try {
             setError(null);
@@ -34,22 +34,19 @@ export function InstallPage() {
 
             setStep('preloading');
 
-            // Preload static questions
             await preloadStaticQuestions((progress) => {
                 const percent = Math.round((progress.loaded / progress.total) * 100);
                 setPreloadProgress(percent);
             });
 
-            // Initialize push notifications
             await initializePushAfterInstall();
 
-            // Perform daily cleanup
             await performDailyCleanup();
 
             setIsInstalled(true);
             setIsPreloaded(true);
             setStep('done');
-
+            navigate('/settings');
         } catch (err) {
             console.error('Installation failed:', err);
             setError('Installation failed. Please try again.');
@@ -57,16 +54,16 @@ export function InstallPage() {
         }
     };
 
-    // If already installed, just show loading and initialize
+
     if (isInstalled && step === 'prompt') {
         handleInstall();
     }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white flex flex-col">
-            {/* Hero Section */}
+
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-                {/* Logo */}
+
                 <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-8 shadow-2xl shadow-blue-500/30">
                     <Zap size={48} className="text-white" />
                 </div>

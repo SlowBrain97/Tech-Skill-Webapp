@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, ForwardedRef } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface CollapseProps {
@@ -8,6 +8,7 @@ interface CollapseProps {
     className?: string;
     headerClassName?: string;
     contentClassName?: string;
+    ref?: ForwardedRef<HTMLDivElement>;
 }
 
 export const Collapse = ({
@@ -16,12 +17,13 @@ export const Collapse = ({
     defaultOpen = false,
     className = '',
     headerClassName = '',
-    contentClassName = ''
+    contentClassName = '',
+    ref
 }: CollapseProps) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className={`border border-gray-700 rounded-xl overflow-hidden mb-2 ${className}`}>
+        <div className={`border border-gray-700 rounded-xl overflow-hidden mb-2 ${className}`} ref={ref}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`w-full flex items-center justify-between p-4 bg-gray-800/50 hover:bg-gray-800 transition-colors text-left ${headerClassName}`}

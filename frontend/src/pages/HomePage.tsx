@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useAppStore } from '../state/appStore';
 import {
     getPushedToday,
@@ -8,18 +8,24 @@ import {
 } from '../db/db';
 import { Collapse } from '../components/Collapse';
 import { Clock, Calendar, Eye, EyeOff } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface QuestionDisplayProps {
     question: StaticQuestion;
     pushedAt?: string;
 }
 
-const QuestionItem = ({ question, pushedAt }: QuestionDisplayProps) => {
+const QuestionItem = forwardRef<QuestionRefType, QuestionDisplayProps>(({ question, pushedAt }: QuestionDisplayProps, ref) => {
     const { settings } = useAppStore();
     const lang = settings.language;
     const content = question.content[lang] || question.content['en'];
     const [showSolution, setShowSolution] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const collapseRef = useRef<HTMLDivElement>(null);
+    useImperativeHandle(ref, () => ({
+        open: () => setIsOpen(true),
+        ...collapseRef.current!
+    }));
 
     return (
         <Collapse
@@ -45,6 +51,8 @@ const QuestionItem = ({ question, pushedAt }: QuestionDisplayProps) => {
             }
             className="mb-3 border-gray-700/50"
             headerClassName="bg-gray-800/30 hover:bg-gray-800/50"
+            ref={collapseRef}
+            defaultOpen={isOpen}
         >
             <div className="space-y-4">
                 <div className="text-gray-300 whitespace-pre-wrap">
@@ -88,13 +96,18 @@ const QuestionItem = ({ question, pushedAt }: QuestionDisplayProps) => {
             </div>
         </Collapse>
     );
-};
-
+});
+interface QuestionItemHandle {
+    open: () => void;
+}
+type QuestionRefType = HTMLDivElement & QuestionItemHandle;
 export function HomePage() {
     const [todayQuestions, setTodayQuestions] = useState<any[]>([]);
     const [historyQuestions, setHistoryQuestions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const questionRef = useRef<{ [key: string]: QuestionRefType | null }>({});
+    const { id } = useParams();
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -138,6 +151,21 @@ export function HomePage() {
 
         loadData();
     }, []);
+    useEffect(() => {
+        if (id && questionRef.current[id]) {
+
+            questionRef.current[id]?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            })
+            questionRef.current[id]?.setAttribute('defaultOpen', 'true');
+            questionRef.current[id]?.classList.add('animate-flash-light');
+            questionRef.current[id]?.focus?.();
+            setTimeout(() => {
+                questionRef.current[id]?.classList.remove('animate-flash-light');
+            }, 1500);
+        }
+    }, [id])
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 pb-24">
@@ -188,6 +216,7 @@ export function HomePage() {
                                     {todayQuestions.map(item => (
                                         <QuestionItem
                                             key={item.id}
+                                            ref={el => { questionRef.current[item.id] = el }}
                                             question={item.question}
                                             pushedAt={item.pushedAt}
                                         />

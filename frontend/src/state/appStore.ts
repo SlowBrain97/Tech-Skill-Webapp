@@ -158,7 +158,6 @@ export const useAppStore = create<AppState>()(
             name: 'tech-skill-app',
             storage: createJSONStorage(() => localStorage),
             partialize: (state) => ({
-                // Only persist these fields in localStorage for fast load
                 isInstalled: state.isInstalled,
                 isPreloaded: state.isPreloaded,
             }),

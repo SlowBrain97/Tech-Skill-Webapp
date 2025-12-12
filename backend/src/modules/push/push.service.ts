@@ -159,7 +159,7 @@ export class PushService {
     /**
      * Cron job - runs every minute to send scheduled notifications
      */
-    @Cron('* * * * *')
+    @Cron('* * * * *', { timeZone: 'Asia/Tokyo' })
     async triggerScheduledNotifications() {
         const now = new Date();
         const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;

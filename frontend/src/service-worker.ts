@@ -122,7 +122,7 @@ async function selectRandomQuestion(topicId: string, difficulty: string): Promis
 
     return selected;
 }
-
+let questionId: string | null = null;
 // Handle push notification
 self.addEventListener('push', (event: PushEvent) => {
     console.log('[SW] Push received');
@@ -164,7 +164,7 @@ async function handlePush(event: PushEvent) {
 
             if (available.length > 0) {
                 question = available[Math.floor(Math.random() * available.length)];
-
+                questionId = question.id;
                 // Save to pushedToday
                 await putToStore('pushedToday', {
                     id: question.id,
@@ -209,7 +209,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
     }
 
     const data = event.notification.data;
-    const url = data?.question ? `/question?id=${data.question.id}` : '/';
+    const url = data?.question ? `/question?id=${data.question.id}` : `/${questionId}`;
 
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
