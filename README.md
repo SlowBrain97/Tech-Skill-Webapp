@@ -8,7 +8,6 @@ A Progressive Web App (PWA) for learning Web Fullstack development through Web P
 - **PWA**: Installable, offline-capable
 - **Push Notifications**: Scheduled learning reminders
 - **Customizable Settings**: Difficulty levels, topics, notification frequency
-- **Admin Dashboard**: CRUD operations for questions
 
 ## 🛠️ Tech Stack
 
