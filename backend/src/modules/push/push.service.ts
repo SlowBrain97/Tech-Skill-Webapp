@@ -53,9 +53,7 @@ export class PushService {
         }
     }
 
-    /**
-     * Get random topic payload (static or dynamic)
-     */
+
     async getRandomTopicPayload(subscriber: Subscriber): Promise<PushPayload | null> {
         try {
             // Get all available topics
@@ -108,9 +106,7 @@ export class PushService {
         }
     }
 
-    /**
-     * Calculate notification schedule based on subscriber settings
-     */
+
     calculateSchedule(subscriber: Subscriber): DateTime[] {
         const { timeStart, timeEnd, pushPerDay } = subscriber;
         const [startH, startM] = timeStart.split(':').map(Number);
@@ -127,20 +123,18 @@ export class PushService {
         if (endMinutes <= startMinutes || pushPerDay <= 0) {
             return [];
         }
-
+        const userDay = DateTime.utc().setZone(subscriber.timeZone);
         const interval = (endMinutes - startMinutes) / pushPerDay;
 
         return Array.from({ length: pushPerDay }, (_, i) => {
             const mins = Math.round(startMinutes + i * interval);
             const h = Math.floor(mins / 60);
             const m = mins % 60;
-            return DateTime.fromObject({ hour: h, minute: m }, { zone: subscriber.timeZone }).toUTC();
+            return DateTime.fromObject({ year: userDay.year, month: userDay.month, day: userDay.day, hour: h, minute: m }, { zone: subscriber.timeZone }).toUTC();
         });
     }
 
-    /**
-     * Send push notification to a subscriber
-     */
+
     async sendPush(subscriber: Subscriber, payload: PushPayload): Promise<boolean> {
         try {
             await webpush.sendNotification(
@@ -177,9 +171,9 @@ export class PushService {
         for (const subscriber of subscribers) {
             try {
                 const schedule = this.calculateSchedule(subscriber);
-                if (!schedule.includes(now)) {
-                    continue;
-                }
+                const shouldPush = schedule.some(s => Math.abs(s.toMillis() - now.toMillis()) <= 60 * 1000);
+
+                if (!shouldPush) continue;
 
                 this.logger.log(`Sending push to ${subscriber.deviceUUID} at ${currentTime}`);
 
