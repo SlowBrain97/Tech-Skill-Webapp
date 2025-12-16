@@ -26,6 +26,7 @@ export class SubscribersService {
             if (dto.pushPerDay) existing.pushPerDay = dto.pushPerDay;
             if (dto.timeStart) existing.timeStart = dto.timeStart;
             if (dto.timeEnd) existing.timeEnd = dto.timeEnd;
+            if (dto.timeZone) existing.timeZone = dto.timeZone;
             existing.isActive = true;
 
             return existing.save();
@@ -54,6 +55,7 @@ export class SubscribersService {
         if (dto.pushPerDay !== undefined) subscriber.pushPerDay = dto.pushPerDay;
         if (dto.timeStart !== undefined) subscriber.timeStart = dto.timeStart;
         if (dto.timeEnd !== undefined) subscriber.timeEnd = dto.timeEnd;
+        if (dto.timeZone !== undefined) subscriber.timeZone = dto.timeZone;
 
         return subscriber.save();
     }

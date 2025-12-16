@@ -69,6 +69,7 @@ const DEFAULT_SETTINGS: Settings = {
     timeStart: '09:00',
     timeEnd: '21:00',
     language: 'en',
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 };
 
 export const useAppStore = create<AppState>()(

@@ -1,6 +1,3 @@
-/**
- * Topic sync service - syncs MongoDB topics with IndexedDB
- */
 
 import { bulkSaveStaticTopics, getAllStaticTopics, StaticTopic } from '../db/db';
 import { STATIC_TOPICS } from './preload';
@@ -27,9 +24,7 @@ interface TopicsResponse {
     dynamic: DynamicTopic[];
 }
 
-/**
- * Fetch all topics from backend (static + dynamic)
- */
+
 export async function fetchTopicsFromBackend(): Promise<TopicsResponse | null> {
     try {
         const response = await fetch(`${API_URL}/api/topics`);
@@ -44,11 +39,7 @@ export async function fetchTopicsFromBackend(): Promise<TopicsResponse | null> {
     }
 }
 
-/**
- * Sync topics with IndexedDB
- * - Static topics are always available locally
- * - Dynamic topics are fetched from backend and cached
- */
+
 export async function syncTopics(): Promise<{
     staticCount: number;
     dynamicCount: number;
@@ -86,9 +77,7 @@ export async function syncTopics(): Promise<{
     };
 }
 
-/**
- * Get all available topics (static + synced dynamic)
- */
+
 export async function getAllAvailableTopics(): Promise<StaticTopic[]> {
     // Try to sync first
     await syncTopics();

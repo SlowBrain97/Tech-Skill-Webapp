@@ -53,10 +53,9 @@ type ProgressCallback = (progress: PreloadProgress) => void;
  */
 async function importQuestionFile(topic: string, difficulty: string): Promise<any[]> {
     try {
-        // Dynamic import based on topic and difficulty
+
         const module = await import(`../data-store/${topic}/${difficulty}.js`);
 
-        // Handle different export formats
         const exportName = Object.keys(module).find(
             key => Array.isArray(module[key]) && key !== 'default'
         );

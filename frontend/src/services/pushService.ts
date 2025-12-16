@@ -23,6 +23,7 @@ export async function registerSubscription(subscription: PushSubscription): Prom
                 pushPerDay: settings.pushPerDay,
                 timeStart: settings.timeStart,
                 timeEnd: settings.timeEnd,
+                timeZone: settings.timeZone,
             }),
         });
 
@@ -40,9 +41,7 @@ export async function registerSubscription(subscription: PushSubscription): Prom
     }
 }
 
-/**
- * Update device settings on backend
- */
+
 export async function syncSettingsToBackend(): Promise<boolean> {
     try {
         const uuid = await getOrCreateDeviceUUID();
@@ -57,6 +56,7 @@ export async function syncSettingsToBackend(): Promise<boolean> {
                 pushPerDay: settings.pushPerDay,
                 timeStart: settings.timeStart,
                 timeEnd: settings.timeEnd,
+                timeZone: settings.timeZone,
             }),
         });
 
@@ -76,9 +76,6 @@ export async function syncSettingsToBackend(): Promise<boolean> {
 
 
 
-/**
- * Convert VAPID key to Uint8Array
- */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -90,16 +87,11 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     return outputArray;
 }
 
-/**
- * Check if push notifications are supported
- */
+
 export function isPushSupported(): boolean {
     return 'serviceWorker' in navigator && 'PushManager' in window;
 }
 
-/**
- * Get or create device UUID
- */
 export async function getOrCreateDeviceUUID(): Promise<string> {
     const device = await getDevice();
     if (device?.uuid) {
@@ -108,9 +100,7 @@ export async function getOrCreateDeviceUUID(): Promise<string> {
     return generateDeviceUUID();
 }
 
-/**
- * Get current notification permission status
- */
+
 export function getNotificationPermission(): NotificationPermission {
     if (!('Notification' in window)) {
         return 'denied';
@@ -121,9 +111,7 @@ export async function getExistingPushSubscription(): Promise<PushSubscription | 
     const registration = await navigator.serviceWorker.ready;
     return registration.pushManager.getSubscription();
 }
-/**
- * Request notification permission
- */
+
 export async function requestNotificationPermission(): Promise<NotificationPermission> {
     if (!('Notification' in window)) {
         throw new Error('Notifications not supported');
@@ -131,10 +119,7 @@ export async function requestNotificationPermission(): Promise<NotificationPermi
     return Notification.requestPermission();
 }
 
-/**
- * Ensure notification permission is granted before proceeding
- * Returns true if permission is granted, false otherwise
- */
+
 export async function ensureNotificationPermission(): Promise<{ granted: boolean; needsManualAction: boolean }> {
     if (!isPushSupported()) {
         return { granted: false, needsManualAction: false };
@@ -147,39 +132,37 @@ export async function ensureNotificationPermission(): Promise<{ granted: boolean
     }
 
     if (currentPermission === 'denied') {
-        // User previously blocked notifications - needs manual action in browser settings
+
         return { granted: false, needsManualAction: true };
     }
 
-    // Permission is 'default' - prompt user
+
     const newPermission = await requestNotificationPermission();
     return { granted: newPermission === 'granted', needsManualAction: newPermission === 'denied' };
 }
 
-/**
- * Subscribe to push notifications
- */
+
 export async function subscribeToPush(): Promise<PushSubscription | null> {
     if (!isPushSupported()) {
         console.warn('Push notifications not supported');
         return null;
     }
 
-    // Request permission
+
     const permission = await requestNotificationPermission();
     if (permission !== 'granted') {
         console.warn('Notification permission denied');
         return null;
     }
 
-    // Get service worker registration
+
     const registration = await navigator.serviceWorker.ready;
 
-    // Check existing subscription
+
     let subscription = await registration.pushManager.getSubscription();
 
     if (!subscription) {
-        // Create new subscription
+
         subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
@@ -195,9 +178,7 @@ export async function getExistingOrCreateSubscription(): Promise<PushSubscriptio
     }
     return subscription;
 }
-/**
- * Unsubscribe from push notifications
- */
+
 export async function unsubscribeFromPush(): Promise<boolean> {
     try {
         const registration = await navigator.serviceWorker.ready;
@@ -206,7 +187,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
         if (subscription) {
             await subscription.unsubscribe();
 
-            // Notify backend
+
             const uuid = await getOrCreateDeviceUUID();
             await fetch(`${API_URL}/api/push/unsubscribe/${uuid}`, {
                 method: 'DELETE',
@@ -223,9 +204,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     }
 }
 
-/**
- * Full subscription flow after A2HS
- */
+
 export async function initializePushAfterInstall(): Promise<boolean> {
     try {
         // Get or create UUID

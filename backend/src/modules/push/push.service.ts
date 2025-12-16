@@ -8,6 +8,7 @@ import { SubscribersService } from '../subscribers/subscribers.service';
 import { Subscriber } from '../subscribers/subscriber.schema';
 import { Topic, TopicDocument } from '../topics/topic.schema';
 import { Question, QuestionDocument } from '../questions/question.schema';
+import { DateTime } from 'luxon';
 
 // Static topics that exist in frontend
 const STATIC_TOPICS = [
@@ -110,9 +111,8 @@ export class PushService {
     /**
      * Calculate notification schedule based on subscriber settings
      */
-    calculateSchedule(subscriber: Subscriber): string[] {
+    calculateSchedule(subscriber: Subscriber): DateTime[] {
         const { timeStart, timeEnd, pushPerDay } = subscriber;
-
         const [startH, startM] = timeStart.split(':').map(Number);
         const [endH, endM] = timeEnd.split(':').map((value, index) => {
             if (index === 0 && Number(value) === 0) {
@@ -134,7 +134,7 @@ export class PushService {
             const mins = Math.round(startMinutes + i * interval);
             const h = Math.floor(mins / 60);
             const m = mins % 60;
-            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            return DateTime.fromObject({ hour: h, minute: m }, { zone: subscriber.timeZone }).toUTC();
         });
     }
 
@@ -164,10 +164,10 @@ export class PushService {
     /**
      * Cron job - runs every minute to send scheduled notifications
      */
-    @Cron('* * * * *', { timeZone: 'Asia/Tokyo' })
+    @Cron('* * * * *')
     async triggerScheduledNotifications() {
-        const now = new Date();
-        const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        const now = DateTime.utc();
+        const currentTime = `${now.hour.toString().padStart(2, '0')}:${now.minute.toString().padStart(2, '0')}`;
 
         this.logger.debug(`Cron running at ${currentTime}`);
 
@@ -177,8 +177,7 @@ export class PushService {
         for (const subscriber of subscribers) {
             try {
                 const schedule = this.calculateSchedule(subscriber);
-
-                if (!schedule.includes(currentTime)) {
+                if (!schedule.includes(now)) {
                     continue;
                 }
 

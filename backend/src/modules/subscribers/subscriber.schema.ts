@@ -47,6 +47,9 @@ export class Subscriber {
 
     @Prop({ default: true })
     isActive: boolean;
+
+    @Prop({ default: 'Asia/Tokyo' })
+    timeZone: string;
 }
 
 export const SubscriberSchema = SchemaFactory.createForClass(Subscriber);

@@ -45,6 +45,10 @@ export class SubscribeDto {
     @IsOptional()
     @IsString()
     timeEnd?: string;
+
+    @IsOptional()
+    @IsString()
+    timeZone?: string;
 }
 
 export class UpdateSettingsDto {
@@ -70,4 +74,8 @@ export class UpdateSettingsDto {
     @IsOptional()
     @IsString()
     timeEnd?: string;
+
+    @IsOptional()
+    @IsString()
+    timeZone?: string;
 }
