@@ -3,7 +3,7 @@
  */
 
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { SettingsPage } from './pages/SettingsPage';
 import { QuestionPage } from './pages/QuestionPage';
 import { HomePage } from './pages/HomePage';
@@ -12,13 +12,13 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { useAppStore } from './state/appStore';
 import { useA2HS } from './hooks/useA2HS';
 import { useTranslation } from 'react-i18next';
-import { Toaster } from 'react-hot-toast';
 import { performDailyCleanup, getStaticQuestionCount } from './db/db';
+import { useNavigate } from 'react-router-dom';
 
 function App() {
   const { isInstalled, isPreloaded, setIsInstalled, setIsPreloaded, loadFromIndexedDB, settings } = useAppStore();
   const { isInstalled: isA2HSInstalled } = useA2HS();
-
+  const navigate = useNavigate();
   const { i18n } = useTranslation();
 
   // Initialize app on mount
@@ -58,12 +58,10 @@ function App() {
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data?.type === 'NOTIFICATION_CLICK') {
           const q = event.data.question;
-          const url = event.data.url;
           const set = useAppStore.getState().setCurrentQuestion;
           set(q);
 
-          // ⭐ Force navigate
-          window.location.href = url;
+          navigate(`/?id=${q.id}`);
         }
       });
     }
@@ -72,33 +70,24 @@ function App() {
   // If not installed or not preloaded, show install page
   if (!isInstalled || !isPreloaded) {
     return (
-      <BrowserRouter>
-        <InstallPage />
-      </BrowserRouter>
+      <InstallPage />
     );
   }
 
   return (
-    <BrowserRouter>
-      <Toaster position="bottom-center" toastOptions={{
-        style: {
-          background: '#333',
-          color: '#fff',
-        },
-      }} />
-      <Routes>
-        {/* Main routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/question" element={<QuestionPage />} />
 
-        {/* Admin routes (keep for CRUD) */}
-        <Route path="/admin" element={<AdminDashboard />} />
+    <Routes>
+      {/* Main routes */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="/question" element={<QuestionPage />} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      {/* Admin routes (keep for CRUD) */}
+      <Route path="/admin" element={<AdminDashboard />} />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

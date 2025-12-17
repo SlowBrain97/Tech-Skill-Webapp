@@ -122,7 +122,7 @@ async function selectRandomQuestion(topicId: string, difficulty: string): Promis
 
     return selected;
 }
-let questionId: string | null = null;
+
 // Handle push notification
 self.addEventListener('push', (event: PushEvent) => {
     console.log('[SW] Push received');
@@ -143,29 +143,28 @@ async function handlePush(event: PushEvent) {
         let notificationBody = 'New tech question available!';
 
         if (payload?.type === 'static') {
-            // Static topic - select random question locally
+
             question = await selectRandomQuestion(payload.topicId, difficulty);
 
             if (question) {
                 notificationBody = question.content[lang]?.title || question.content.en.title;
             }
         } else if (payload?.type === 'dynamic') {
-            // Dynamic topic - questions provided by backend
+
             const questions = payload.questions || [];
 
-            // Filter by difficulty
+
             let candidates = questions.filter((q: any) => q.difficulty === difficulty);
             if (candidates.length === 0) candidates = questions;
 
-            // Get blocked
+
             const blockedIds = await getBlockedIds();
             let available = candidates.filter((q: any) => !blockedIds.has(q.id));
             if (available.length === 0) available = candidates;
 
             if (available.length > 0) {
                 question = available[Math.floor(Math.random() * available.length)];
-                questionId = question.id;
-                // Save to pushedToday
+
                 await putToStore('pushedToday', {
                     id: question.id,
                     topicId: payload.topicId,
@@ -209,7 +208,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
     }
 
     const data = event.notification.data;
-    const url = data?.question ? `/question?id=${data.question.id}` : `/${questionId}`;
+    const url = data?.question ? `/question?id=${data.question.id}` : `/`;
 
     event.waitUntil(
         self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
@@ -221,7 +220,6 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
                     client.postMessage({
                         type: 'NOTIFICATION_CLICK',
                         question: data?.question,
-                        url
                     });
                     client.focus();
                     return;

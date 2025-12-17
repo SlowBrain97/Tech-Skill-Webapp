@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 import { useAppStore } from '../state/appStore';
 import {
     getPushedToday,
@@ -8,7 +8,7 @@ import {
 } from '../db/db';
 import { Collapse } from '../components/Collapse';
 import { Clock, Calendar, Eye, EyeOff } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 interface QuestionDisplayProps {
     question: StaticQuestion;
@@ -107,7 +107,33 @@ export function HomePage() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const questionRef = useRef<{ [key: string]: QuestionRefType | null }>({});
-    const { id } = useParams();
+    const [params] = useSearchParams();
+    const id = params.get('id');
+
+    useLayoutEffect(() => {
+        if (!id || !questionRef.current[id]) return;
+
+        requestAnimationFrame(() => {
+            questionRef.current[id]?.setAttribute('defaultOpen', 'true');
+            questionRef.current[id]?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            })
+        })
+
+    }, [todayQuestions, id])
+    useEffect(() => {
+        if (!id || !questionRef.current[id]) return;
+        questionRef.current[id]?.classList.add('animate-flash-light');
+        questionRef.current[id]?.focus?.();
+        const timer = setTimeout(() => {
+            questionRef.current[id]?.classList.remove('animate-flash-light');
+        }, 1500);
+
+        return () => {
+            clearTimeout(timer);
+        }
+    }, [todayQuestions, id])
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -151,21 +177,7 @@ export function HomePage() {
 
         loadData();
     }, []);
-    useEffect(() => {
-        if (id && questionRef.current[id]) {
 
-            questionRef.current[id]?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            })
-            questionRef.current[id]?.setAttribute('defaultOpen', 'true');
-            questionRef.current[id]?.classList.add('animate-flash-light');
-            questionRef.current[id]?.focus?.();
-            setTimeout(() => {
-                questionRef.current[id]?.classList.remove('animate-flash-light');
-            }, 1500);
-        }
-    }, [id])
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 pb-24">

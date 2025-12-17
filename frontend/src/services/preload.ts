@@ -48,9 +48,7 @@ interface PreloadProgress {
 
 type ProgressCallback = (progress: PreloadProgress) => void;
 
-/**
- * Dynamic import a question file
- */
+
 async function importQuestionFile(topic: string, difficulty: string): Promise<any[]> {
     try {
 
@@ -67,9 +65,7 @@ async function importQuestionFile(topic: string, difficulty: string): Promise<an
     }
 }
 
-/**
- * Transform raw question data to StaticQuestion format
- */
+
 function transformQuestion(raw: any, topicId: string, difficulty: Difficulty): StaticQuestion {
     return {
         id: raw._id || raw.id || `${topicId}-${difficulty}-${Math.random().toString(36).slice(2)}`,
@@ -80,9 +76,7 @@ function transformQuestion(raw: any, topicId: string, difficulty: Difficulty): S
     };
 }
 
-/**
- * Preload all static questions into IndexedDB
- */
+
 export async function preloadStaticQuestions(onProgress?: ProgressCallback): Promise<number> {
     const totalCombinations = STATIC_TOPICS.length * DIFFICULTIES.length;
     let loadedCombinations = 0;
@@ -138,17 +132,13 @@ export async function preloadStaticQuestions(onProgress?: ProgressCallback): Pro
     return totalQuestions;
 }
 
-/**
- * Check if preload is needed
- */
+
 export async function isPreloadNeeded(): Promise<boolean> {
     const count = await getStaticQuestionCount();
     return count === 0;
 }
 
-/**
- * Get preload status
- */
+
 export async function getPreloadStatus(): Promise<{
     isPreloaded: boolean;
     questionCount: number;

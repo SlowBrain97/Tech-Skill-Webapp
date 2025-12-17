@@ -33,6 +33,7 @@ export interface Settings {
     timeStart: string;
     timeEnd: string;
     language: Language;
+    timeZone: string;
 }
 
 export interface StaticTopic {
@@ -186,6 +187,7 @@ const DEFAULT_SETTINGS: Settings = {
     timeStart: '09:00',
     timeEnd: '21:00',
     language: 'en',
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 };
 
 /**
@@ -414,11 +416,9 @@ export async function performDailyCleanup(): Promise<void> {
     const todayPushed = await getPushedToday();
 
     if (todayPushed.length > 0) {
-        // Check if we already have history for today (app reopened same day)
         const existingHistory = await getPushedHistoryByDate(today);
 
         if (existingHistory) {
-            // Merge with existing
             const existingIds = new Set(existingHistory.items.map(i => i.id));
             const newItems = todayPushed
                 .filter(p => !existingIds.has(p.id))

@@ -74,8 +74,8 @@ export const TopicSelector = ({ selectedTopics, onChange }: TopicSelectorProps) 
                     onDragEnter={handleTrashDragEnter}
                     onDragLeave={handleTrashDragLeave}
                     className={`p-3 rounded-lg border-2 border-dashed transition-all ${isOverTrash
-                            ? 'border-red-500 bg-red-500/20'
-                            : 'border-gray-600 bg-gray-800/50'
+                        ? 'border-red-500 bg-red-500/20'
+                        : 'border-gray-600 bg-gray-800/50'
                         }`}
                 >
                     <Trash2 className={`w-5 h-5 ${isOverTrash ? 'text-red-400' : 'text-gray-400'}`} />
