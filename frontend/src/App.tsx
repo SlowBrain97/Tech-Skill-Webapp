@@ -54,18 +54,23 @@ function App() {
 
   // Listen for messages from service worker
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data?.type === 'NOTIFICATION_CLICK') {
-          const q = event.data.question;
-          const set = useAppStore.getState().setCurrentQuestion;
-          set(q);
-
-          navigate(`/?id=${q.id}`);
-        }
-      });
+    const handleMessage = (event: MessageEvent) => {
+      const data = event.data;
+      if (data.type === 'NOTIFICATION_CLICK') {
+        const questionId = data.question.id;
+        navigate(`/?id=${questionId}`);
+      }
     }
-  }, []);
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleMessage);
+    }
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleMessage);
+      }
+    }
+  }, [navigate]);
 
   // If not installed or not preloaded, show install page
   if (!isInstalled || !isPreloaded) {
