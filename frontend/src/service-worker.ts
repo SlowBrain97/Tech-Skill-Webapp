@@ -115,7 +115,8 @@ async function selectRandomQuestion(topicId: string, difficulty: string): Promis
 
     // Save to pushedToday
     await putToStore('pushedToday', {
-        question: selected,
+        id: selected.id,
+        topicId: selected.topicId,
         pushedAt: new Date().toISOString(),
     });
 
@@ -165,7 +166,8 @@ async function handlePush(event: PushEvent) {
                 question = available[Math.floor(Math.random() * available.length)];
 
                 await putToStore('pushedToday', {
-                    question: question,
+                    id: question.id,
+                    topicId: payload.topicId,
                     pushedAt: new Date().toISOString(),
                 });
 
@@ -213,13 +215,13 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
             // Try to focus existing window
             for (const client of clients) {
                 if ('focus' in client) {
-
+                    client.focus();
                     // Post message to client with question data
                     client.postMessage({
                         type: 'NOTIFICATION_CLICK',
                         question: data?.question,
                     });
-                    client.focus();
+
                     return;
                 }
             }

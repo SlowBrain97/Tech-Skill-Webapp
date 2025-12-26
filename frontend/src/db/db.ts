@@ -50,10 +50,10 @@ export interface StaticQuestion {
     tags?: string[];
     content: QuestionContent;
 }
-export type Question = StaticQuestion;
 
 export interface PushedItem {
-    question: Question;
+    id: string;
+    topicId: string;
     pushedAt: string;
 }
 
@@ -392,7 +392,7 @@ export async function getBlockedQuestionIds(): Promise<Set<string>> {
 
     // Get today's pushed
     const todayPushed = await getPushedToday();
-    todayPushed.forEach(p => ids.add(p.question.id));
+    todayPushed.forEach(p => ids.add(p.id));
 
     // Get last 3 days from history
     const last3Days = getLastNDaysDates(3);
@@ -410,19 +410,19 @@ export async function getBlockedQuestionIds(): Promise<Set<string>> {
  * Daily cleanup: Move today to history, delete old entries
  */
 export async function performDailyCleanup(): Promise<void> {
-    const today = new Date().toISOString();
+    const today = getDateString();
 
     // Get today's pushed items
     const todayPushed = await getPushedToday();
-    const yesterdayPushed = todayPushed[0].pushedAt;
-    if (yesterdayPushed !== today && todayPushed.length > 0) {
+
+    if (todayPushed.length > 0) {
         const existingHistory = await getPushedHistoryByDate(today);
 
         if (existingHistory) {
             const existingIds = new Set(existingHistory.items.map(i => i.id));
             const newItems = todayPushed
-                .filter(p => !existingIds.has(p.question.id))
-                .map(p => ({ id: p.question.id, topicId: p.question.topicId }));
+                .filter(p => !existingIds.has(p.id))
+                .map(p => ({ id: p.id, topicId: p.topicId }));
 
             await savePushedHistory({
                 date: today,
@@ -432,7 +432,7 @@ export async function performDailyCleanup(): Promise<void> {
             // Create new history entry
             await savePushedHistory({
                 date: today,
-                items: todayPushed.map(p => ({ id: p.question.id, topicId: p.question.topicId })),
+                items: todayPushed.map(p => ({ id: p.id, topicId: p.topicId })),
             });
         }
     }

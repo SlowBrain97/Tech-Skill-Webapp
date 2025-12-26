@@ -10,7 +10,6 @@ import { StaticTopic, Difficulty, Language } from '../db/db';
 import { Trash2, Plus, Check, Clock, Bell, BookOpen, Globe, AlertCircle, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 
 const DIFFICULTIES: { value: Difficulty; label: Record<Language, string> }[] = [
     { value: 'fresher', label: { en: 'Fresher', vi: 'Fresher', jp: '新人' } },
@@ -25,6 +24,44 @@ const LANGUAGES: { value: Language; label: string }[] = [
     { value: 'jp', label: '日本語' },
 ];
 
+// Notification permission labels by language
+const NOTIFICATION_LABELS: Record<Language, {
+    title: string;
+    enabled: string;
+    disabled: string;
+    blocked: string;
+    enableButton: string;
+    blockedHint: string;
+    requiredHint: string;
+}> = {
+    en: {
+        title: 'Notification Permission',
+        enabled: 'Notifications enabled',
+        disabled: 'Notifications disabled',
+        blocked: 'Notifications blocked',
+        enableButton: 'Enable Notifications',
+        blockedHint: 'Please enable notifications in your browser settings',
+        requiredHint: 'Notification permission is required to save settings',
+    },
+    vi: {
+        title: 'Quyền thông báo',
+        enabled: 'Thông báo đã bật',
+        disabled: 'Thông báo đã tắt',
+        blocked: 'Thông báo bị chặn',
+        enableButton: 'Bật thông báo',
+        blockedHint: 'Vui lòng bật thông báo trong cài đặt trình duyệt',
+        requiredHint: 'Cần cấp quyền thông báo để lưu cài đặt',
+    },
+    jp: {
+        title: '通知権限',
+        enabled: '通知が有効です',
+        disabled: '通知が無効です',
+        blocked: '通知がブロックされています',
+        enableButton: '通知を有効にする',
+        blockedHint: 'ブラウザの設定で通知を有効にしてください',
+        requiredHint: '設定を保存するには通知権限が必要です',
+    },
+};
 
 export function SettingsPage() {
     const { settings, updateSettings, addSelectedTopic, removeSelectedTopic } = useAppStore();
@@ -35,7 +72,6 @@ export function SettingsPage() {
     const [isOverTrash, setIsOverTrash] = useState(false);
     const trashRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const { t } = useTranslation(['settings']);
     // Notification permission state
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
     const [showPermissionError, setShowPermissionError] = useState(false);
@@ -152,18 +188,18 @@ export function SettingsPage() {
                 <div className='flex justify-between items-center'>
                     <div>
                         <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                            {t('settings:header:title')}
+                            Settings
                         </h1>
                     </div>
                     <button
                         onClick={() => navigate('/home')}
                         className="px-6 py-3 bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 rounded-xl font-medium transition-colors"
                     >
-                        {t('settings:header:goHome')}
+                        Go to Home
                     </button>
                 </div>
 
-                <p className="text-gray-400 text-sm mt-1">{t('settings:header:subtitle')}</p>
+                <p className="text-gray-400 text-sm mt-1">Configure your learning preferences</p>
             </header>
 
             {/* Topics Section */}
@@ -171,7 +207,7 @@ export function SettingsPage() {
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         <BookOpen size={18} className="text-blue-400" />
-                        <h2 className="font-semibold">{t('settings:topics:title')}</h2>
+                        <h2 className="font-semibold">Topics</h2>
                     </div>
                     {draggedTopic && (
                         <div
@@ -193,7 +229,7 @@ export function SettingsPage() {
                 {/* Selected Topics */}
                 <div className="flex flex-wrap gap-2 min-h-[48px] p-3 bg-gray-800/50 rounded-xl border border-gray-700">
                     {selectedTopicData.length === 0 ? (
-                        <span className="text-gray-500 text-sm">{t('settings:topics:empty')}</span>
+                        <span className="text-gray-500 text-sm">No topics selected. All topics will be included.</span>
                     ) : (
                         selectedTopicData.map(topic => (
                             <div
@@ -220,7 +256,7 @@ export function SettingsPage() {
               flex items-center gap-1"
                     >
                         <Plus size={14} />
-                        {t('settings:topics:add')}
+                        Add
                     </button>
                 </div>
 
@@ -229,12 +265,12 @@ export function SettingsPage() {
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end justify-center">
                         <div className="bg-gray-800 w-full max-w-lg rounded-t-2xl p-4 pb-8 max-h-[70vh] overflow-y-auto">
                             <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-semibold">{t('settings:topics:selectTitle')}</h3>
+                                <h3 className="font-semibold">Select Topics</h3>
                                 <button
                                     onClick={() => setShowTopicPicker(false)}
                                     className="text-gray-400 hover:text-white"
                                 >
-                                    {t('settings:topics:done')}
+                                    Done
                                 </button>
                             </div>
 
@@ -253,7 +289,7 @@ export function SettingsPage() {
                                             {topic.displayName[settings.language] || topic.name}
                                         </div>
                                         <div className="text-xs text-gray-400 mt-1">
-                                            {topic.questionCount} {t('settings:topics:questions')}
+                                            {topic.questionCount} questions
                                         </div>
                                     </button>
                                 ))}
@@ -267,7 +303,7 @@ export function SettingsPage() {
             <section className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
                     <span className="text-blue-400">📊</span>
-                    <h2 className="font-semibold">{t('settings:difficulty:title')}</h2>
+                    <h2 className="font-semibold">Difficulty</h2>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -291,7 +327,7 @@ export function SettingsPage() {
             <section className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
                     <Bell size={18} className="text-blue-400" />
-                    <h2 className="font-semibold">{t('settings:notification:title')}</h2>
+                    <h2 className="font-semibold">{NOTIFICATION_LABELS[settings.language].title}</h2>
                 </div>
 
                 {/* Notification Permission Toggle */}
@@ -320,14 +356,14 @@ export function SettingsPage() {
                                         : 'text-gray-300'
                                     }`}>
                                     {notificationPermission === 'granted'
-                                        ? t('settings:notification:enabled')
+                                        ? NOTIFICATION_LABELS[settings.language].enabled
                                         : notificationPermission === 'denied'
-                                            ? t('settings:notification:blocked')
-                                            : t('settings:notification:disabled')}
+                                            ? NOTIFICATION_LABELS[settings.language].blocked
+                                            : NOTIFICATION_LABELS[settings.language].disabled}
                                 </p>
                                 {notificationPermission === 'denied' && (
                                     <p className="text-xs text-gray-500 mt-1">
-                                        {t('settings:notification:blockedHint')}
+                                        {NOTIFICATION_LABELS[settings.language].blockedHint}
                                     </p>
                                 )}
                             </div>
@@ -339,7 +375,7 @@ export function SettingsPage() {
                                 className="px-4 py-2 rounded-lg bg-blue-500/20 border border-blue-500/30 
                                     text-blue-400 text-sm font-medium hover:bg-blue-500/30 transition-all"
                             >
-                                {t('settings:notification:enableButton')}
+                                {NOTIFICATION_LABELS[settings.language].enableButton}
                             </button>
                         )}
                     </div>
@@ -349,7 +385,7 @@ export function SettingsPage() {
                         <div className="mt-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
                             <p className="text-xs text-red-400 flex items-center gap-2">
                                 <AlertCircle size={14} />
-                                {t('settings:notification:requiredHint')}
+                                {NOTIFICATION_LABELS[settings.language].requiredHint}
                             </p>
                         </div>
                     )}
@@ -358,7 +394,7 @@ export function SettingsPage() {
                 {/* Push Count */}
                 <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4 mb-4">
                     <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm text-gray-300">{t('settings:push:perDay')}</span>
+                        <span className="text-sm text-gray-300">Pushes per day</span>
                         <span className="text-lg font-bold text-blue-400">{settings.pushPerDay}</span>
                     </div>
                     <input
@@ -381,12 +417,12 @@ export function SettingsPage() {
                 <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <Clock size={16} className="text-gray-400" />
-                        <span className="text-sm text-gray-300">{t('settings:time:title')}</span>
+                        <span className="text-sm text-gray-300">Active hours</span>
                     </div>
 
                     <div className="flex items-center gap-4">
                         <div className="flex-1">
-                            <label className="text-xs text-gray-500 mb-1 block">{t('settings:time:start')}</label>
+                            <label className="text-xs text-gray-500 mb-1 block">Start</label>
                             <input
                                 type="time"
                                 value={settings.timeStart}
@@ -397,7 +433,7 @@ export function SettingsPage() {
                         </div>
                         <span className="text-gray-500 mt-5">—</span>
                         <div className="flex-1">
-                            <label className="text-xs text-gray-500 mb-1 block">{t('settings:time:end')}</label>
+                            <label className="text-xs text-gray-500 mb-1 block">End</label>
                             <input
                                 type="time"
                                 value={settings.timeEnd}
@@ -414,7 +450,7 @@ export function SettingsPage() {
             <section className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
                     <Globe size={18} className="text-blue-400" />
-                    <h2 className="font-semibold">{t('settings:language:title')}</h2>
+                    <h2 className="font-semibold">Language</h2>
                 </div>
 
                 <div className="flex gap-2">
@@ -443,7 +479,7 @@ export function SettingsPage() {
             hover:shadow-blue-500/40 transition-all
             disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isSaving ? t('settings:actions:saving') : t('settings:actions:save')}
+                    {isSaving ? 'Saving...' : 'Save Settings'}
                 </button>
             </div>
         </div>

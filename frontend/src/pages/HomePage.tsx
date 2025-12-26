@@ -9,7 +9,6 @@ import {
 import { Collapse } from '../components/Collapse';
 import { Clock, Calendar, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 
 interface QuestionDisplayProps {
     question: StaticQuestion;
@@ -23,7 +22,6 @@ const QuestionItem = forwardRef<QuestionRefType, QuestionDisplayProps>(({ questi
     const [showSolution, setShowSolution] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const collapseRef = useRef<HTMLDivElement>(null);
-    const { t } = useTranslation(['question', 'common']);
     useImperativeHandle(ref, () => ({
         open: () => setIsOpen(true),
         ...collapseRef.current!
@@ -40,7 +38,7 @@ const QuestionItem = forwardRef<QuestionRefType, QuestionDisplayProps>(({ questi
                                 question.difficulty === 'middle' ? 'border-yellow-500/30 text-yellow-400 bg-yellow-500/10' :
                                     'border-red-500/30 text-red-400 bg-red-500/10'
                             }`}>
-                            {t(`common.difficulty.${question.difficulty}`)}
+                            {question.difficulty}
                         </span>
                         {pushedAt && (
                             <span className="flex items-center gap-1">
@@ -63,7 +61,7 @@ const QuestionItem = forwardRef<QuestionRefType, QuestionDisplayProps>(({ questi
 
                 <div className="pt-4 border-t border-gray-700/50">
                     <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-semibold text-gray-400">{t('question.answer')}</h4>
+                        <h4 className="text-sm font-semibold text-gray-400">Answer</h4>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -72,7 +70,7 @@ const QuestionItem = forwardRef<QuestionRefType, QuestionDisplayProps>(({ questi
                             className="text-xs flex items-center gap-1 text-blue-400 hover:text-blue-300 transition-colors"
                         >
                             {showSolution ? <EyeOff size={14} /> : <Eye size={14} />}
-                            {showSolution ? t('question.hideAnswer') : t('question.showAnswer')}
+                            {showSolution ? 'Hide' : 'Show'}
                         </button>
                     </div>
 
@@ -89,7 +87,7 @@ const QuestionItem = forwardRef<QuestionRefType, QuestionDisplayProps>(({ questi
                         {!showSolution && (
                             <div className="absolute inset-0 flex items-center justify-center bg-gray-800/50 backdrop-blur-[2px]">
                                 <span className="text-gray-400 text-sm font-medium flex items-center gap-2">
-                                    <Eye size={16} /> {t('question.tapToReveal')}
+                                    <Eye size={16} /> Tap to reveal
                                 </span>
                             </div>
                         )}
@@ -104,12 +102,12 @@ interface QuestionItemHandle {
 }
 type QuestionRefType = HTMLDivElement & QuestionItemHandle;
 export function HomePage() {
-
-    const { todayPushedQuestions, historyPushedQuestions, isLoading } = useAppStore();
+    const [todayQuestions, setTodayQuestions] = useState<any[]>([]);
+    const [historyQuestions, setHistoryQuestions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const questionRef = useRef<{ [key: string]: QuestionRefType | null }>({});
     const [params] = useSearchParams();
-    const { t } = useTranslation(['home', 'common']);
     const id = params.get('id');
 
     useLayoutEffect(() => {
@@ -123,8 +121,7 @@ export function HomePage() {
             })
         })
 
-    }, [todayPushedQuestions])
-
+    }, [todayQuestions, id])
     useEffect(() => {
         if (!id || !questionRef.current[id]) return;
         questionRef.current[id]?.classList.add('animate-flash-light');
@@ -136,7 +133,51 @@ export function HomePage() {
         return () => {
             clearTimeout(timer);
         }
-    }, [todayPushedQuestions])
+    }, [todayQuestions, id])
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setLoading(true);
+                // 1. Get all questions for lookup
+                const allQuestions = await getAllStaticQuestions();
+                const qMap = new Map(allQuestions.map(q => [q.id, q]));
+
+                // 2. Get today's pushed
+                const today = await getPushedToday();
+                const todayItems = today.map(item => ({
+                    ...item,
+                    question: qMap.get(item.id)
+                })).filter(i => i.question);
+
+                setTodayQuestions(todayItems);
+
+                // 3. Get history (last 3 days)
+                const allHistory = await getAllPushedHistory();
+
+                const sortedHistory = allHistory.sort((a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                );
+
+                const historyItems = sortedHistory.flatMap(h =>
+                    h.items.map(item => ({
+                        ...item,
+                        date: h.date,
+                        question: qMap.get(item.id)
+                    }))
+                ).filter(i => i.question);
+
+                setHistoryQuestions(historyItems);
+
+            } catch (error) {
+                console.error("Failed to load home data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadData();
+    }, []);
+
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 pb-24">
@@ -144,21 +185,21 @@ export function HomePage() {
                 <div className='flex justify-between items-center'>
                     <div>
                         <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                            {t('home:appTitle')}
+                            Daily Knowledge
                         </h1>
-                        <p className="text-gray-400 text-sm mt-1">{t('home:appSubtitle')}</p>
+                        <p className="text-gray-400 text-sm mt-1">Grow your tech skills every day</p>
                     </div>
                     <button
                         onClick={() => navigate('/settings')}
                         className="px-6 py-3 bg-gradient-to-r from-blue-400 to-emerald-400 hover:from-blue-500 hover:to-emerald-500 rounded-xl font-medium transition-colors"
                     >
-                        {t('home:goToSettings')}
+                        Go to Settings
                     </button>
                 </div>
 
             </header>
 
-            {isLoading ? (
+            {loading ? (
                 <div className="flex justify-center py-10">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 </div>
@@ -172,9 +213,9 @@ export function HomePage() {
                                     <div className="p-1.5 bg-blue-500/20 rounded-lg">
                                         <Clock size={18} className="text-blue-400" />
                                     </div>
-                                    <span className="font-bold text-lg">{t('home:today:title')}</span>
+                                    <span className="font-bold text-lg">Today's Questions</span>
                                     <span className="ml-auto bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                        {todayPushedQuestions.length}
+                                        {todayQuestions.length}
                                     </span>
                                 </div>
                             }
@@ -182,12 +223,12 @@ export function HomePage() {
                             className="border-blue-500/30 bg-blue-500/5"
                             headerClassName="bg-transparent hover:bg-blue-500/10"
                         >
-                            {todayPushedQuestions.length > 0 ? (
+                            {todayQuestions.length > 0 ? (
                                 <div className="space-y-2 pt-2">
-                                    {todayPushedQuestions.map(item => (
+                                    {todayQuestions.map(item => (
                                         <QuestionItem
-                                            key={item.question.id}
-                                            ref={el => { questionRef.current[item.question.id] = el }}
+                                            key={item.id}
+                                            ref={el => { questionRef.current[item.id] = el }}
                                             question={item.question}
                                             pushedAt={item.pushedAt}
                                         />
@@ -195,8 +236,8 @@ export function HomePage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-8 text-gray-500">
-                                    <p>{t('home:today:empty:title')}</p>
-                                    <p className="text-xs mt-1">{t('home:today:empty:hint')}</p>
+                                    <p>No questions yet today.</p>
+                                    <p className="text-xs mt-1">Wait for notifications!</p>
                                 </div>
                             )}
                         </Collapse>
@@ -210,20 +251,20 @@ export function HomePage() {
                                     <div className="p-1.5 bg-purple-500/20 rounded-lg">
                                         <Calendar size={18} className="text-purple-400" />
                                     </div>
-                                    <span className="font-bold text-lg">{t('home:history:title')}</span>
+                                    <span className="font-bold text-lg">Recent History</span>
                                     <span className="ml-auto bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                        {historyPushedQuestions.length}
+                                        {historyQuestions.length}
                                     </span>
                                 </div>
                             }
-                            defaultOpen={historyPushedQuestions.length > 0}
+                            defaultOpen={historyQuestions.length > 0}
                             className="border-purple-500/30 bg-purple-500/5"
                             headerClassName="bg-transparent hover:bg-purple-500/10"
                         >
-                            {historyPushedQuestions.length > 0 ? (
+                            {historyQuestions.length > 0 ? (
                                 <div className="space-y-6 pt-2">
-                                    {historyPushedQuestions.map((item, idx) => {
-                                        const showDateHeader = idx === 0 || item.date !== historyPushedQuestions[idx - 1].date;
+                                    {historyQuestions.map((item, idx) => {
+                                        const showDateHeader = idx === 0 || item.date !== historyQuestions[idx - 1].date;
                                         return (
                                             <div key={item.id + item.date}>
                                                 {showDateHeader && (
@@ -240,7 +281,7 @@ export function HomePage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-8 text-gray-500">
-                                    <p>{t('home:history:empty')}</p>
+                                    <p>No recent history.</p>
                                 </div>
                             )}
                         </Collapse>
