@@ -1,0 +1,14 @@
+{
+    "emptyState": {
+        "noQuestion": "質問がありません",
+        "hint": "通知を待つか、設定を確認してください。",
+        "goHome": "ホームへ戻る"
+    },
+    "question": {
+        "showAnswer": "答えを見る",
+        "hideAnswer": "答えを隠す"
+    },
+    "navigation": {
+        "settings": "設定"
+    }
+}

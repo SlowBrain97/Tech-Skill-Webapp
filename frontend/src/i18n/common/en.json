@@ -1,0 +1,8 @@
+{
+    "difficulty": {
+        "fresher": "Fresher",
+        "junior": "Junior",
+        "middle": "Middle",
+        "senior": "Senior"
+    }
+}

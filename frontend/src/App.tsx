@@ -11,15 +11,14 @@ import { InstallPage } from './pages/InstallPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { useAppStore } from './state/appStore';
 import { useA2HS } from './hooks/useA2HS';
-import { useTranslation } from 'react-i18next';
-import { performDailyCleanup, getStaticQuestionCount } from './db/db';
+import { performDailyCleanup, getStaticQuestionCount, getAllStaticQuestions, StaticQuestion, getPushedToday, getAllPushedHistory } from './db/db';
 import { useNavigate } from 'react-router-dom';
+import i18n from './i18n/i18n';
 
 function App() {
-  const { isInstalled, isPreloaded, setIsInstalled, setIsPreloaded, loadFromIndexedDB, settings } = useAppStore();
+  const { allStaticQuestions, setTodayPushedQuestions, setHistoryPushedQuestions, setIsLoading, isInstalled, isPreloaded, setIsInstalled, setIsPreloaded, loadFromIndexedDB, settings, setAllStaticQuestions } = useAppStore();
   const { isInstalled: isA2HSInstalled } = useA2HS();
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
 
   // Initialize app on mount
   useEffect(() => {
@@ -37,13 +36,46 @@ function App() {
       if (isA2HSInstalled) {
         setIsInstalled(true);
       }
+      const qMap = new Map<string, StaticQuestion>();
+      const staticQuestions = await getAllStaticQuestions();
+      staticQuestions.map((q) => {
+        qMap.set(q.id, q);
+      })
 
+      setAllStaticQuestions(qMap);
       // Daily cleanup
       await performDailyCleanup();
     };
 
     init();
   }, []);
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      // Load today questions
+      const todayQuestions = await getPushedToday();
+      setTodayPushedQuestions(todayQuestions);
+
+      // Load history questions
+      const allHistory = await getAllPushedHistory();
+
+      const sortedHistory = allHistory.sort((a, b) =>
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
+      const historyItems = sortedHistory.flatMap(h =>
+        h.items.map(item => ({
+          ...item,
+          date: h.date,
+          question: allStaticQuestions.get(item.id)
+        }))
+      ).filter(i => i.question);
+
+      setHistoryPushedQuestions(historyItems);
+      setIsLoading(false);
+    }
+    loadData();
+  }, [])
 
   // Sync language with i18n
   useEffect(() => {
@@ -57,7 +89,14 @@ function App() {
     const handleMessage = (event: MessageEvent) => {
       const data = event.data;
       if (data.type === 'NOTIFICATION_CLICK') {
-        const questionId = data.question.id;
+        const question = data.question;
+        const questionId = question.id;
+        (async () => {
+          setIsLoading(true);
+          const todayQuestions = await getPushedToday();
+          setTodayPushedQuestions(todayQuestions);
+          setIsLoading(false);
+        });
         navigate(`/?id=${questionId}`);
       }
     }
@@ -70,7 +109,7 @@ function App() {
         navigator.serviceWorker.removeEventListener('message', handleMessage);
       }
     }
-  }, [navigate]);
+  }, []);
 
   // If not installed or not preloaded, show install page
   if (!isInstalled || !isPreloaded) {

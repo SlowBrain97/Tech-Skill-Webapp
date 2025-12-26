@@ -6,14 +6,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../state/appStore';
 import { ChevronDown, ChevronUp, ArrowLeft, BookOpen, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function QuestionPage() {
     const navigate = useNavigate();
     const { currentQuestion, showAnswer, toggleShowAnswer, settings } = useAppStore();
     const [isAnimating, setIsAnimating] = useState(false);
 
+    const { t } = useTranslation(['question', 'common']);
     const lang = settings.language || 'en';
-
     // Handle message from service worker
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -61,13 +62,13 @@ export function QuestionPage() {
             <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 flex flex-col items-center justify-center">
                 <div className="text-center">
                     <AlertCircle size={64} className="text-gray-600 mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold text-gray-400 mb-2">No Question</h2>
-                    <p className="text-gray-500 mb-6">Wait for a notification or check your settings.</p>
+                    <h2 className="text-xl font-semibold text-gray-400 mb-2">{t('question:emptyState:noQuestion')}</h2>
+                    <p className="text-gray-500 mb-6">{t('question:emptyState:hint')}</p>
                     <button
                         onClick={() => navigate('/')}
                         className="px-6 py-3 bg-blue-500 hover:bg-blue-600 rounded-xl font-medium transition-colors"
                     >
-                        Go to Home
+                        {t('question:emptyState:goHome')}
                     </button>
                 </div>
             </div>
@@ -96,7 +97,7 @@ export function QuestionPage() {
                                 {currentQuestion.topicId}
                             </span>
                             <span className="px-2 py-0.5 rounded text-xs font-medium bg-gray-700 text-gray-300">
-                                {currentQuestion.difficulty}
+                                {t(`common:difficulty:${currentQuestion.difficulty}`)}
                             </span>
                         </div>
                     </div>
@@ -130,7 +131,7 @@ export function QuestionPage() {
                         className="w-full p-4 flex items-center justify-between hover:bg-gray-800/50 transition-colors"
                     >
                         <span className="font-medium text-gray-300">
-                            {showAnswer ? 'Hide Answer' : 'Show Answer'}
+                            {showAnswer ? t('question:question:showAnswer') : t('question:question:hideAnswer')}
                         </span>
                         {showAnswer ? (
                             <ChevronUp size={20} className={`text-gray-400 ${isAnimating ? 'animate-bounce' : ''}`} />
@@ -165,14 +166,14 @@ export function QuestionPage() {
                         className="flex-1 py-3 rounded-xl bg-gray-800 border border-gray-700
               font-medium hover:bg-gray-700 transition-colors"
                     >
-                        Settings
+                        {t('question:navigation:settings')}
                     </button>
                     <button
                         onClick={handleToggleAnswer}
                         className="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600
               font-medium shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all"
                     >
-                        {showAnswer ? 'Hide Answer' : 'Show Answer'}
+                        {showAnswer ? t('question:question:hideAnswer') : t('question:question:showAnswer')}
                     </button>
                 </div>
             </div>

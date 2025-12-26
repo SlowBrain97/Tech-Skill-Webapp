@@ -1,0 +1,16 @@
+{
+    "appTitle": "Kiến thức mỗi ngày",
+    "appSubtitle": "Nâng cao kỹ năng công nghệ mỗi ngày",
+    "goToSettings": "Cài đặt",
+    "today": {
+        "title": "Câu hỏi hôm nay",
+        "empty": {
+            "title": "Hôm nay chưa có câu hỏi nào.",
+            "hint": "Hãy chờ thông báo nhé!"
+        }
+    },
+    "history": {
+        "title": "Lịch sử gần đây",
+        "empty": "Chưa có lịch sử gần đây."
+    }
+}

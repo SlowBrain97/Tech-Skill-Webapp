@@ -12,6 +12,8 @@ import {
     Settings,
     Device,
     Difficulty,
+    StaticQuestion,
+    PushedItem,
 } from '../db/db';
 
 interface CurrentQuestion {
@@ -40,6 +42,9 @@ interface AppState {
     isPreloaded: boolean;
     isLoading: boolean;
     preloadProgress: number;
+    allStaticQuestions: Map<string, StaticQuestion>;
+    todayPushedQuestions: PushedItem[];
+    historyPushedQuestions: any[];
 
     // Current question (from notification)
     currentQuestion: CurrentQuestion | null;
@@ -56,6 +61,9 @@ interface AppState {
     setCurrentQuestion: (question: CurrentQuestion | null) => void;
     toggleShowAnswer: () => void;
     loadFromIndexedDB: () => Promise<void>;
+    setAllStaticQuestions: (questions: Map<string, StaticQuestion>) => void;
+    setTodayPushedQuestions: (questions: PushedItem[]) => void;
+    setHistoryPushedQuestions: (data: any[]) => void;
 
     // Topic management
     addSelectedTopic: (topicId: string) => Promise<void>;
@@ -86,6 +94,9 @@ export const useAppStore = create<AppState>()(
             preloadProgress: 0,
             currentQuestion: null,
             showAnswer: false,
+            allStaticQuestions: new Map<string, StaticQuestion>(),
+            todayPushedQuestions: [] as PushedItem[],
+            historyPushedQuestions: [] as PushedItem[],
 
             // Device actions
             setDevice: (device) => set({ device, isDeviceLoaded: true }),
@@ -109,7 +120,9 @@ export const useAppStore = create<AppState>()(
             // Question actions
             setCurrentQuestion: (question) => set({ currentQuestion: question, showAnswer: false }),
             toggleShowAnswer: () => set((state) => ({ showAnswer: !state.showAnswer })),
-
+            setAllStaticQuestions: (questions: Map<string, StaticQuestion>) => set({ allStaticQuestions: questions }),
+            setTodayPushedQuestions: (questions: PushedItem[]) => set({ todayPushedQuestions: questions }),
+            setHistoryPushedQuestions: (data: any[]) => set({ historyPushedQuestions: data }),
             // Load from IndexedDB
             loadFromIndexedDB: async () => {
                 try {

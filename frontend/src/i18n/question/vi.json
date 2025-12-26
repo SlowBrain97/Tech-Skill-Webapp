@@ -1,0 +1,14 @@
+{
+    "emptyState": {
+        "noQuestion": "Chưa có câu hỏi",
+        "hint": "Hãy chờ thông báo hoặc kiểm tra lại cài đặt của bạn.",
+        "goHome": "Về trang chủ"
+    },
+    "question": {
+        "showAnswer": "Hiện đáp án",
+        "hideAnswer": "Ẩn đáp án"
+    },
+    "navigation": {
+        "settings": "Cài đặt"
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "header": {
+        "title": "設定",
+        "subtitle": "学習設定をカスタマイズします",
+        "goHome": "ホームへ戻る"
+    },
+    "topics": {
+        "title": "トピック",
+        "empty": "トピックが選択されていません。すべてのトピックが含まれます。",
+        "add": "追加",
+        "selectTitle": "トピックを選択",
+        "done": "完了",
+        "questions": "{{count}} 問"
+    },
+    "difficulty": {
+        "title": "難易度"
+    },
+    "notification": {
+        "title": "通知の権限",
+        "enabled": "通知は有効です",
+        "disabled": "通知は無効です",
+        "blocked": "通知がブロックされています",
+        "enable": "通知を有効にする",
+        "blockedHint": "ブラウザの設定で通知を有効にしてください",
+        "requiredHint": "設定を保存するには通知の権限が必要です"
+    },
+    "push": {
+        "perDay": "1日の通知回数"
+    },
+    "time": {
+        "title": "アクティブ時間",
+        "start": "開始",
+        "end": "終了",
+        "dash": "—"
+    },
+    "language": {
+        "title": "言語"
+    },
+    "actions": {
+        "save": "設定を保存",
+        "saving": "保存中..."
+    }
+}
